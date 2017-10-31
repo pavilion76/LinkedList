@@ -1,4 +1,4 @@
-//Known problems: function at returns void if the index is invalid
+//Known problems: function at returns void if the index is invalid and not out 
 
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
@@ -9,6 +9,7 @@
 #include "Node.h"
 #include "LinkedListInterface.h"
 #include <sstream> 
+#include <stdexcept>
 
 using namespace std;
 
@@ -19,13 +20,9 @@ class LinkedList: public LinkedListInterface <ItemType> {
 		Node<ItemType> *tail=NULL;
 		int actualSize;
 	public:
-		/*
-	insertHead
-
-	A Node<ItemType> with the given value should be inserted at the beginning of the list.
-
-	Do not allow duplicate values in the list.
-	*/
+	~LinkedList(){
+		clear();
+	}
 	void insertHead(ItemType value){
 		if(thereIsADuplicate(value)){
 			return;
@@ -46,13 +43,14 @@ class LinkedList: public LinkedListInterface <ItemType> {
 		if(thereIsADuplicate(value)){
 			return;
 		}
-	 	cout<<"insertTail "<<value<<endl;
+	 	
 	 	if(head==NULL){
 	 		insertHead(value);
 	 		//actualSize++; done in insert head
 	 		return;
 	 	}
-	 	if(actualSize ==1){
+	 	cout<<"insertTail "<<value<<endl;
+	 	if(actualSize ==1){	//head and tail are the same value
 	 		head ->next = new Node<ItemType>(value);
 	 		tail = head->next;
 	 		actualSize++;
@@ -62,18 +60,9 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	 	tail->next =temp;
 	 	tail=temp;
 	 	actualSize++;
-		cout<<"new tail "<<tail->data<<endl;
+		cout<<toString()<<endl;
 	 }
 
-	/*
-	insertAfter
-
-	A Node<ItemType> with the given value should be inserted immediately after the
-	Node<ItemType> whose value is equal to insertionNode.
-
-	A Node<ItemType> should only be added if the Node<ItemType> whose value is equal to
-	insertionNode is in the list. Do not allow duplicate values in the list.
-	*/
 	 void insertAfter(ItemType value, ItemType insertionNode){
 	 	cout<<toString();
 	 	cout<<"insertAfter "<<insertionNode<<endl;
@@ -85,7 +74,6 @@ class LinkedList: public LinkedListInterface <ItemType> {
 				return;		 		
 	 		}
 	 		if(curr->data == insertionNode){	//found where the new Node<ItemType> goes
-	 			cout<<"2\n";
 	 			here=curr;
 	 		}
 	 		//cout<<"next val "<<curr->next<<endl;
@@ -97,14 +85,20 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	 	temp->next = here->next;
 	 	here->next = temp;
 	 	actualSize++;
-	 	cout<<toString();
+	 	cout<<toString()<<endl;
 	 	updateTail();
 	 }
 	 void updateTail(){
+	 	if(actualSize==0){
+	 		tail=NULL;
+	 		return;
+	 	}
 	 	Node<ItemType> *curr = head;
 	 	while(curr->next != NULL){
+	 		//cout<<"1\n";
 	 		curr = curr->next;	
 	 	}
+	 	//cout<<"2\n";
 	 	tail=curr;
 	 }
 	 //returns true if a duplicate is found, returns false otherwise.
@@ -127,18 +121,27 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	The list may or may not include a Node<ItemType> with the given value.
 	*/
 	 void remove(ItemType value){
+	 	cout<<"removing: "<<value<<endl;
+	 	cout<<toString()<<endl;
 	 	Node<ItemType> *curr = head;
-	 	Node<ItemType> *previous;
+	 	Node<ItemType> *previous=head;
 	 	while(curr != NULL){
+	 		cout<<curr->data<<endl;
 	 		if(curr->data == value){	//I found you
 				previous->next=curr->next;
+				if(curr==head){//edge case
+					head=curr->next;
+				}
 				delete curr;
 				actualSize--;
+				updateTail();
+				//cout<<toString()<<endl;
 				return;
 	 		}
 	 		previous=curr;
 	 		curr = curr->next;
 	 	}
+	 	//cout<<"\n\n\n\n\nsomething went terribly wrong";
 	 }
 
 	/*
@@ -147,10 +150,16 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	Remove all Node<ItemType>s from the list.
 	*/
 	 void clear(){
+	 	cout<<toString()<<endl;
 	 	while(actualSize >0){
 	 		Node<ItemType> *curr = head;
-	 		while(curr != NULL)
+	 		Node<ItemType> *previous = head;
+	 		while(curr->next != NULL){
+	 			previous=curr;
 	 			curr = curr->next;
+	 		}
+	 		previous->next = NULL;
+	 		cout<<"deleting "<<curr->data<<endl;
 	 		delete curr;
 	 		actualSize--;
 	 	}
@@ -158,30 +167,15 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	 	tail=NULL;
 	 
 	 }
-
-	/*
-	at
-
-	Returns the value of the Node<ItemType> at the given index. The list begins at
-	index 0.
-
-	If the given index is out of range of the list, throw an out of range exception.
-	*/
 	 ItemType at(int index){
-	 	cout<<"index: "<<index<<" size "<<size()<<endl;
-	 	if(index >= size()||index<0){
-	 		cout<<"error 404\n";
-	 		Node<ItemType> temp;
-	 		return temp.data;
-	 	}
+	 	if(index >= size()||index<0)
+	 		throw std::out_of_range("out_of_range");
 	 	Node<ItemType> *curr = head;
 	 	for (int i = 0; i < index; i++) {
             curr = curr->next;
         }
         return curr->data;
-	 }
-	 
-	 
+	 } 
 	 int size(){
 	 	return actualSize;
 	 }
@@ -193,7 +187,8 @@ class LinkedList: public LinkedListInterface <ItemType> {
 	 		ss<<curr->data<<" ";
 	 		curr = curr->next;	
 	 	}
-	 	return ss.str();
+	 	string ans = ss.str();
+	 	return ans.substr(0,ans.size()-1);
 	 }
 };
 #endif
